@@ -1,0 +1,52 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.3.1.RELEASE")
+    }
+}
+
+if (!hasProperty('mainClass')) {
+    ext.mainClass = 'com.appsbywill.2016SoC'
+}
+
+apply plugin: 'spring-boot'
+
+
+test {
+    maxHeapSize = "1000m"
+}
+
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+
+jar {
+    baseName = '2016SoC'
+    version = '1.0'
+}
+
+repositories {
+    
+    mavenCentral()
+
+    mavenLocal()
+}
+dependencies{
+    compile("org.springframework.boot:spring-boot-starter-data-mongodb")
+    compile("org.springframework.boot:spring-boot-starter-data-rest")
+    compile("org.springframework.boot:spring-boot-starter-security")
+    compile("org.springframework.boot:spring-boot-starter-actuator")
+    compile("org.springframework.boot:spring-boot-starter-web")
+    compile 'com.google.code.gson:gson:2.6.1'
+
+    compile 'log4j:log4j:1.2.17'
+
+    compile("javax.mail:javax.mail-api:1.5.4")
+    compile("com.twilio.sdk:twilio-java-sdk:6.2.0-edge")
+
+    testCompile("com.jayway.restassured:rest-assured:2.8.0")
+    testCompile("org.springframework.boot:spring-boot-starter-test")
+
+    testCompile("org.mockito:mockito-core:2.0.+")
+}

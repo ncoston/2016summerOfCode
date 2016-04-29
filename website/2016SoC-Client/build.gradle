@@ -1,0 +1,35 @@
+import org.gradle.internal.os.OperatingSystem;
+
+plugins {
+  id "com.moowork.gulp" version "0.11"
+}
+apply plugin:'base'
+
+task zipBuildDir(dependsOn: "build", type: Zip){
+	baseName 'dist'
+	from "$buildDir/dist"
+	into 'dist'
+    exclude ("*.zip")
+	destinationDir new File("$buildDir")
+	
+}
+
+
+task protractorTest(type: Exec){
+	if (OperatingSystem.current().isWindows()){
+		commandLine 'cmd', '/c', 'node_modules\\.bin\\protractor protractor.conf.js';
+	}else{
+		commandLine './node_modules/.bin/protractor', 'protractor.conf.js'
+	}
+}
+
+task runKarmaTests(type: Exec){
+	if (OperatingSystem.current().isWindows()){
+		commandLine 'cmd', '/c', 'node_modules\\.bin\\karma start karma.conf.js';
+	}else{
+		commandLine "./node_modules/.bin/karma", "start", "karma.conf.js"
+	}
+}
+
+
+build.dependsOn(gulp_build, runKarmaTests)

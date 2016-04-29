@@ -1,0 +1,233 @@
+import static groovy.io.FileType.FILES;
+import java.text.SimpleDateFormat;
+import java.text.DateFormat;
+plugins{
+    id 'org.hidetake.ssh' version '1.1.2'
+}
+
+allprojects{
+    task wrapper(type: Wrapper){
+    	gradleVersion = "2.12"
+    }
+}
+
+def pathSeparator = File.separator;
+/**
+ * This task sets up all of the servers the users are able to deploy to. neat!
+ *
+ */
+task setupRemotes() <<{
+    remotes {
+        def serverName = "2016SOC";
+
+        //find the username, this is common across all remotes
+        def username;
+        try{
+            Properties props = new Properties()
+            props.load(new FileInputStream(System.getProperty("user.home") + pathSeparator + ".gradle" + pathSeparator + "deploy.properties"))
+            username = props.getProperty("username");
+        }catch(FileNotFoundException e){
+            printErr("WARNING: deploy.properties file not found, using default username of: " +  System.properties['user.name']);
+            username =  System.properties['user.name'];
+        }
+
+        2016SoC01{
+            host = 'www.2016summerofcode.com'
+            //host = 'localhost'
+            user = username;
+            def privateSummerOfCodeKey;
+
+            //knownHosts = file("${System.properties['user.home']}/.ssh/known_hosts")
+            knownHosts = allowAnyHosts
+            try{
+                new File(System.getProperty("user.home") + pathSeparator + ".gradle" + pathSeparator + 'private_' + serverName + '_keys/').eachFileRecurse(FILES){
+                    if (it.name.endsWith('.pem')){
+                        privateSummerOfCodeKey = it
+                        return;
+                    }
+                }
+            }catch(FileNotFoundException e){
+                privateSummerOfCodeKey = null;
+            }
+            if (privateSummerOfCodeKey == null){
+                printErr("No private key for 2016summerofcode found. Please check the folder:" +  System.getProperty("user.home") + pathSeparator + ".gradle" + pathSeparator + 'private_' + serverName + '_keys/')
+                printErr("If the private key for 2016SoC01 isn't there, please put it there and try again. thanks.");
+            }
+            identity = privateSummerOfCodeKey;
+        }
+      
+    }
+}
+
+
+task deployTo2016SoC(dependsOn: ["setupRemotes", ":2016SoC-Server:build", ":2016SoC-Client:zipBuildDir"]) << {
+
+    BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+    def response = "";
+    println("Please specify which 2016SoC you want to deploy to (options below, choose based on the number) type 'quit' to cancel: \r\n");
+    def i = 0;
+    for (Object remote: remotes){
+        println "[" + i + "]: " + (remote.host)
+        i++;
+    }
+    def validNumber = false;
+    def exit = false;
+    def choice = -999;
+    while (!validNumber && !exit){
+        response = br.readLine();
+        if (response.toLowerCase().contains("quit")){
+            exit = true;
+        }else{
+            try{
+                choice = Integer.parseInt(response);
+                if (choice < 0 || choice > i){
+                    println("you entered a number outside of the range of items I listed, c'mon! try again. ");
+                }else{
+                    validNumber = true;
+                }
+            }catch(NumberFormatException e){
+                println ("That wasn't a number! try again.")
+            }
+        }
+    }
+    if (exit){
+        println("Exiting and cancelling deployment. Thanks for using the program!");
+        return;
+    }
+    println "You chose to deploy to: " + remotes[choice].host + ".\r\nIf this is correct, type 'yes' please. Otherwise, type 'no' and deployment will cancel: \r\n";
+    response = "";
+
+    while (response == "" && !exit){
+        response = br.readLine();
+        if (response.toLowerCase().contains('no')){
+            exit = true;
+        }else if (response.toLowerCase().contains("yes")){
+            println("Alright! Here we go! Deploying to: " + remotes[choice].host);
+        }else{
+            println("That wasn't either yes, or no... try again!");
+            response = "";
+        }
+    }
+    if (exit){
+        println("Exiting and cancelling deployment. Thanks for using the program!");
+        return;
+    }
+    def jarName;
+    def clientZipName;
+    def clientZipNameNoExtension;
+    project(":2016SoC-Server") {
+        tasks.withType(Jar){
+            jarName  = (baseName + "-" + version + ".jar")
+        }
+    }
+    project(":2016SoC-Client") {
+        tasks.withType(Zip){
+            clientZipName  = (archiveName)
+            clientZipNameNoExtension = baseName
+        }
+    }
+
+    ssh.run{
+        session(remotes[choice]){
+            put from: '2016SoC-Client\\build\\' + clientZipName, into: '/tmp'
+            put from: '2016SoC-Server\\build\\libs\\' + jarName, into: '/tmp'
+            execute "ps aux | awk '/[S]oC+/ {system(\" sudo kill \"\$2)}'", pty: true
+            execute 'rm -rf /opt/surcon/2016SoC/server/*.*'
+            execute 'mv /tmp/' + jarName + ' /opt/surcon/2016SoC/server/'
+            executeBackground 'java  -Djava.security.egd=file:/dev/./urandom -jar /opt/surcon/2016SoC/server/' + jarName + ' >/opt/surcon/2016SoC/server/output.txt 2>/opt/surcon/2016SoC/server/error.txt &'
+            execute 'mv /tmp/' + clientZipName + ' /opt/surcon/2016SoC/client/'
+            execute 'unzip /opt/surcon/2016SoC/client/' + clientZipName + ' -d /opt/surcon/2016SoC/client/'
+            //execute 'chmod 775 -R /opt/surcon/2016SoC/client/' + clientZipNameNoExtension
+            //execute 'chown root:automation -R /opt/surcon/2016SoC/client/' + clientZipNameNoExtension
+            execute 'rm -rf /var/www/html/2016SoC/*'
+            execute 'mv /opt/surcon/2016SoC/client/' + clientZipNameNoExtension + '/* /var/www/html/2016SoC/'
+            execute 'rm -rf /opt/surcon/2016SoC/client/' + clientZipNameNoExtension + '/'
+            execute 'rm  /opt/surcon/2016SoC/client/' + clientZipName
+        }
+    }
+
+}
+
+
+DateFormat df = new SimpleDateFormat("YYYYMMDDHHmm");
+def currentDateString = df.format(new Date());
+def dataFolder = System.getenv("APPDATA") + "/gradleMongoTemp";
+//def 2016SoC_password = "This is the password that we are using for logging into the 2016SoC DB. neato gang! hahaha?!p98eyufaldhubfahfaaisudhf_____<<<???";
+task copyRemoteProductionMongoDBToLocal(dependsOn: ["setupRemotes"]) << {
+    def datafolderFile = new File(dataFolder);
+    datafolderFile.mkdir();
+    remotes.create('mongoRemote') {
+        host = "www.2016summerofcode.com"
+        def username;
+        try{
+            Properties props = new Properties()
+            props.load(new FileInputStream(System.getProperty("user.home") + pathSeparator + ".gradle" + pathSeparator + "deploy.properties"))
+            username = props.getProperty("username");
+        }catch(FileNotFoundException e){
+            printErr("WARNING: deploy.properties file not found, using default username of: " +  System.properties['user.name']);
+            username =  System.properties['user.name'];
+        }
+        user = username;
+        def privateMongoKeyFile;
+        def serverInnerName = "2016SoC_mongo";
+        knownHosts = allowAnyHosts
+        try{
+            new File(System.getProperty("user.home") + pathSeparator + ".gradle" + pathSeparator + 'private_' + serverInnerName + '_keys/').eachFileRecurse(FILES){
+                if (it.name.endsWith('.pem')){
+                    privateMongoKeyFile = it
+                    return;
+                }
+            }
+        }catch(FileNotFoundException e){
+            privateMongoKeyFile = null;
+        }
+        if (privateMongoKeyFile == null){
+            printErr("No private key for 2016SoC01 found. Please check the folder:" +  System.getProperty("user.home") + pathSeparator + ".gradle" + pathSeparator + 'private_' + serverInnerName + '_keys/')
+            printErr("If the private key for 2016SoC01 isn't there, please put it there and try again. thanks.");
+            return;
+        }
+        identity = privateMongoKeyFile;
+    }
+    ssh.run{
+        session(remotes.mongoRemote){
+            execute "mongodump --db 2016SoC_db -u wdaniels -p \"" + 2016SoC_password + "\" --out /tmp/gradleAutoDump-" + currentDateString + ".dmp"
+            get from: "/tmp/gradleAutoDump-" + currentDateString + ".dmp", into: dataFolder + "/gradleMongoTemp"
+            execute "rm -rf /tmp/gradleAutoDump-" + currentDateString + ".dmp"
+        }
+    }
+}
+
+task restoreMongo(type: Exec) {
+    commandLine 'cmd', '/c', "mongorestore --db 2016SoC_db " + dataFolder + "/gradleMongoTemp/gradleAutoDump-" + currentDateString + ".dmp/2016SoC_db";
+}
+
+def resourceDir = "2016SoC-Server/src/main/resources/"
+
+task makePropertyFileTemp(dependsOn:["2016SoC-Server:test"])<<{
+
+    file(resourceDir + "application.properties").renameTo(file(resourceDir + "application.properties.temp"));
+}
+
+
+task makeDeployPropPrimary(dependsOn: ["makePropertyFileTemp"])<<{
+    file(resourceDir + "deploy.properties").renameTo(file(resourceDir + "application.properties"));
+}
+
+
+task makeDeployPropSecondary() << {
+    file(resourceDir + "application.properties").renameTo(file(resourceDir + "deploy.properties"));
+}
+
+task restoreDevelopmentProperties(dependsOn: ["makeDeployPropSecondary"])<<{
+    file(resourceDir + "application.properties.temp").renameTo(file(resourceDir + "application.properties"));
+}
+
+task modifyApplicationProperties(dependsOn: ["makePropertyFileTemp", "makeDeployPropPrimary"])<<{
+    print ("Modifying the deploy.properties and application.properties");
+}
+
+deployTo2016SoC.dependsOn(modifyApplicationProperties)
+deployTo2016SoC.finalizedBy(restoreDevelopmentProperties)
+
+restoreMongo.dependsOn(copyRemoteProductionMongoDBToLocal);
+restoreMongo.mustRunAfter(copyRemoteProductionMongoDBToLocal);

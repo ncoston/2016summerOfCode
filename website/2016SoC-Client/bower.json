@@ -1,0 +1,26 @@
+{
+  "name": "2016-Summer-Of-Code Client",
+  "description": "AngularJS client application for the 2016 summer of code",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "angular": "~1.4.8",
+    "angular-bootstrap": "1.1.2",
+    "bootstrap-css-only": "3.3.6",
+    "angular-mocks": "1.5.0",
+    "angular-resource": "latest",
+    "angular-ui-router": "latest",
+    "ng-file-upload": "latest",
+    "ng-lodash": "0.3.0",
+    "lodash": "2.4.2",
+    "ngprogress": "latest",
+    "dygraphs": "latest",
+    "angular-cookies": "latest",
+    "angular-sweetalert": "latest",
+    "sweetalert": "latest",
+    "angular-sanitize":"latest"
+  },
+  "resolutions": {
+    "angular": "~1.4.8"
+  }
+}
