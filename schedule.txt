@@ -1,11 +1,15 @@
 The tentative schedule for the summer will be as follows: 
 
 Thursday, June 2'nd: Class intro, Initial projects, editors 'getting into git', useful resources, 'java hello world' lab/demo, deploying code to website.
+	Project: Random projects from project euler.net (mostly more trivial-type mathy one-off problems)
 Thursday, June 9'th: Feedback about project 1, qa/etc. Object Oriented Design, inheritance and recursion. 'but why?', Project 2 assignment
+	Project: Inventory system for all your books in your office/house/whatever. 
 Thursday, June 16'th: Project 2 feedback, Working on teams, top 5 'interview' algorithms, basic data structures, more advanced git, Project 3 assignment
-Thursday, June 23'rd: Project 3 feedback - open time for questions/course adjustments based on aptitude. Begin the SDLC (Software Development Life Cycle), Project 4 assignment
-Thursday, June 30'th: Project 4 feedback, SDLC ctd. working with third-party libraries and making cohesive pieces of software. 
+	Project: 
+Thursday, June 23'rd: Project 3 feedback - open time for questions/course adjustments based on aptitude.working with third-party libraries Begin the SDLC (Software Development Life Cycle), Project 4 assignment: 
+Thursday, June 30'th: Project 4 feedback, SDLC ctd. web-programming basics/intermediate and making cohesive pieces of software. 
 --week off for 4'th of july, longer project--
 Thursday, July 14'th: Project 4 feedback (a little extra long since it was a 2-week project), final project explained, teams assigned/picked/whatever. Advanced java concepts (lambdas/threading/stream API)
 Thursday, July 21'st: project check-in (make sure it's going ok), examples of projects so far written in other languages for some brief exposure. 
 Thursday, July 28'th: Final project collected/presented. Short presentations of 'what you learned', best next steps for getting a real job, etc. 
+

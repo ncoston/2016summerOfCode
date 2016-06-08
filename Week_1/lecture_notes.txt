@@ -1,0 +1,13 @@
+Personal notes/workflow/whatever. it's what I'm gonna do. 
+
+1) Quick intro about the class, objectives (building REAL software, not just pet projects, etc.), tentative schedule, all that good stuff. 15 min? 
+2) talk about the useful resources from e-mail (that you sent.. right?!).  5-10 minutes
+3) lecture on what source code management is, and why it's so important.  15-20 minutes
+4) lab work to get everyone checked out fork of the repository 10 - 15 minutes
+5) lab work on getting everyones IDE setup/installed/first hello world program compiled. - 5-10 minutes
+4) lecture on why we're using java and what's good and bad about it. - 5 minuts
+5) show people project euler, get them setup with accounts.  - 5 minutes
+6) some lab time for people to work on the first problem - 20 minutes
+7) lab work for submitting a pull request - 10-15 minutes
+8) some final closing comments on code style/documentation/why it's important - 5-10 minutes
+9) drink!

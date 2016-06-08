@@ -25,3 +25,4 @@ website/SoC2016-Client/build/
 #gradle things I don't want to commit
 .gradle
 .git
+/Week_1/HelloWorld/nbproject/private/
