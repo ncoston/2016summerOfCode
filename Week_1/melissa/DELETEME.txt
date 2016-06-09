@@ -1,0 +1,1 @@
+In Git, you can't just commit empty folders, you have to actually commit a file (just a quirk of how it works), so I have to put these DELETEME's in as placeholders to make the folders for everyone
